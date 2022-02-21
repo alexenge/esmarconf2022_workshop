@@ -177,10 +177,15 @@ regplot(res, mod="year", xlab="Publication Year")
 dat$random <- ifelse(dat$alloc=="random", 1, 0)
 
 # subgrouping based on the 'random' dummy variable
-res <- rma(yi, vi, method="DL", subset=c(random==0), data=dat)
-res
-res <- rma(yi, vi, method="DL", subset=c(random==1), data=dat)
-res
+res_0 <- rma(yi, vi, method="DL", subset=c(random==0), data=dat)
+res_0
+res_1 <- rma(yi, vi, method="DL", subset=c(random==1), data=dat)
+res_1
+
+# test if subgroup MAs are actually different
+res_diff <- rma(c(coef(res_0), coef(res_1)), c(vcov(res_0), vcov(res_1)),
+                mods=c(0,1), method="FE")
+res_diff
 
 # mixed-effects meta-regression model with dummy variable
 res <- rma(yi, vi, mods = ~ random, method="DL", data=dat)
