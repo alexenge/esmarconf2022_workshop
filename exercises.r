@@ -26,8 +26,7 @@ library(metafor)
 help(dat.bangertdrowns2004)
 
 # copy data to 'dat'
-dat <- dat.bangertdrowns2004
-dat
+(dat <- dat.bangertdrowns2004)
 
 # note: NA = not available (i.e., missing values)
 
@@ -36,16 +35,20 @@ escalc(measure="SMD", m1i=342, sd1i=68, n1i=27,
                       m2i=303, sd2i=75, n2i=23)
 
 # fit a random-effects model (use either the DL or REML estimator)
+(res <- rma(yi, vi, data=dat))
 
 # obtain the 95% prediction interval
+predict(res, digits=2)
 
 # do the results suggest that writing-to-learn interventions have on average a
 # positive effect on academic achievement? if so, how consistent is the effect
 # across studies?
 
 # obtain a 95% CIs for tau^2 and I^2
+confint(res)
 
 # fit an equal-effects model (as in Bangert-Drowns et al., 2004)
+(res <- rma(yi, vi, method="EE", data=dat))
 
 # find the results provided by this model in Bangert-Drowns et al. (2004); do
 # you think these are the results that should have been reported in the paper?
@@ -62,17 +65,45 @@ abline(v=0, lwd=3)
 # fit mixed-effects meta-regression models with the following moderators (one
 # at a time): grade (treated categorically!), length (continuously), wic,
 # feedback, info, pers, imag, and meta
+dat <- within(dat, grade_cat <- factor(grade, levels = c("1", "2", "3", "4")))
+(res_grade_cat <- rma(yi, vi, mods=~grade_cat, data=dat))
+(res_length <- rma(yi, vi, mods=~length, data=dat))
+(res_wic <- rma(yi, vi, mods=~wic, data=dat))
+(res_feedback <- rma(yi, vi, mods=~feedback, data=dat))
+(res_info <- rma(yi, vi, mods=~info, data=dat))
+(res_pers <- rma(yi, vi, mods=~pers, data=dat))
+(res_imag <- rma(yi, vi, mods=~imag, data=dat))
+(res_meta <- rma(yi, vi, mods=~meta, data=dat))
+
+# alternative version of the grade model without the intercept
+(res_grade_cat_no_intercept <- rma(yi, vi, mods=~0+grade_cat, data=dat))
 
 # for grade, compute the estimated average SMD for each level
+predict(res_grade_cat, newmods=c(0, 0, 0))
+predict(res_grade_cat, newmods=c(1, 0, 0))
+predict(res_grade_cat, newmods=c(0, 1, 0))
+predict(res_grade_cat, newmods=c(0, 0, 1))
 
 # for length, compute the estimated average SMD for length equal to 1 and 24
+predict(res_length, newmods=1)
+predict(res_length, newmods=24)
 
 # for meta, compute the estimated average SMD for meta=0 and meta=1
+predict(res_meta, newmods=0)
+predict(res_meta, newmods=1)
 
 # fit a model with multiple moderators and compute some predicted average SMDs
 # for various combinations of the moderator values; do you see differences in
 # the relevance of particular moderator variables in the model compared to the
 # models where each moderator was examined individually?
+(res_grade_cat_feedback <- rma(yi, vi, mods =~grade_cat+feedback, data=dat))
+predict(res_grade_cat_feedback, newmods=c(0, 0, 0, 0)) # Grade 1
+predict(res_grade_cat_feedback, newmods=c(0, 0, 0, 1)) # Grade 1 + feedback
+predict(res_grade_cat_feedback, newmods=c(1, 0, 0, 0)) # Grade 2
+predict(res_grade_cat_feedback, newmods=c(1, 0, 0, 1)) # Grade 2 + feedback
+
+# Test the common effect of the (categorical) grade factor
+anova(res_grade_cat_feedback, btt="grade_cat")
 
 ############################################################################
 
@@ -111,9 +142,11 @@ dat <- escalc(measure="ZCOR", ri=ri, ni=ni, data=dat, subset=criterion=="grade")
 dat
 
 # fit a random-effects model
+(res <- rma(yi, vi, data=dat))
 
 # compute the estimated average true correlation, 95% CI, and 95% PI
 # note: use the back-transformation transf=transf.ztor
+predict(res, transf=transf.ztor, digits=2)
 
 # is there on average a correlation between class attendance and performance?
 # if so, how strong is that correlation? how consistent is the correlation
